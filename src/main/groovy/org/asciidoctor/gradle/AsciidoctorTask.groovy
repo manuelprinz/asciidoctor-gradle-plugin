@@ -121,6 +121,9 @@ class AsciidoctorTask extends DefaultTask {
     Configuration classpath
 
     AsciidoctorTask() {
+        description = 'Converts AsciiDoc files and copies the output files and related resources to the build directory.'
+        group = 'Documentation'
+
         srcDir = project.file('src/docs/asciidoc')
     }
 
