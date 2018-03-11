@@ -20,7 +20,7 @@ import org.gradle.api.Project
 /**
  * @author Andres Almiray
  */
-class AsciidoctorExtension {
+class AsciidoctorJExtension {
     String version = '1.5.6'
 
     String groovyDslVersion = '1.0.0.Alpha2'
@@ -36,7 +36,7 @@ class AsciidoctorExtension {
 
     final Project project
 
-    AsciidoctorExtension(Project project) {
+    AsciidoctorJExtension(Project project) {
         this.project = project
     }
 }

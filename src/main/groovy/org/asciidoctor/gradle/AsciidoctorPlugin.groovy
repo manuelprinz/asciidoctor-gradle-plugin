@@ -38,7 +38,7 @@ class AsciidoctorPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.apply(plugin: 'base')
 
-        AsciidoctorExtension extension = project.extensions.create(ASCIIDOCTORJ, AsciidoctorExtension, project)
+        AsciidoctorJExtension asciidoctorJExtension = project.extensions.create(ASCIIDOCTORJ, AsciidoctorJExtension, project)
 
         project.afterEvaluate {
             if(!project.extensions.asciidoctorj.noDefaultRepositories) {
@@ -49,16 +49,16 @@ class AsciidoctorPlugin implements Plugin<Project> {
         }
 
         Configuration configuration = project.configurations.maybeCreate(ASCIIDOCTOR)
-        project.logger.info("[Asciidoctor] asciidoctorj: ${extension.version}")
-        project.logger.info("[Asciidoctor] asciidoctorj-groovy-dsl: ${extension.groovyDslVersion}")
+        project.logger.info("[Asciidoctor] asciidoctorj: ${asciidoctorJExtension.version}")
+        project.logger.info("[Asciidoctor] asciidoctorj-groovy-dsl: ${asciidoctorJExtension.groovyDslVersion}")
 
         configuration.incoming.beforeResolve(new Action<ResolvableDependencies>() {
             @SuppressWarnings('UnusedMethodParameter')
             void execute(ResolvableDependencies resolvableDependencies) {
                 DependencyHandler dependencyHandler = project.dependencies
                 def dependencies = configuration.dependencies
-                dependencies.add(dependencyHandler.create(ASCIIDOCTORJ_CORE_DEPENDENCY + extension.version))
-                dependencies.add(dependencyHandler.create(ASCIIDOCTORJ_GROOVY_DSL_DEPENDENCY + extension.groovyDslVersion))
+                dependencies.add(dependencyHandler.create(ASCIIDOCTORJ_CORE_DEPENDENCY + asciidoctorJExtension.version))
+                dependencies.add(dependencyHandler.create(ASCIIDOCTORJ_GROOVY_DSL_DEPENDENCY + asciidoctorJExtension.groovyDslVersion))
             }
         })
 
