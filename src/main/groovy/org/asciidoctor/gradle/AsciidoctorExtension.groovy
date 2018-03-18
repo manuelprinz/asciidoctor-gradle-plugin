@@ -16,12 +16,32 @@
 package org.asciidoctor.gradle
 
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 
 class AsciidoctorExtension {
 
-    final private Project project
+    private final DirectoryProperty sourceDir
 
     AsciidoctorExtension(Project project) {
-        this.project = project
+        // Initialize fields
+        sourceDir = project.layout.directoryProperty()
+        // Set default values
+        sourceDir.set(new File('src/docs/asciidoc'))
+    }
+
+    DirectoryProperty getSourceDir() {
+        sourceDir
+    }
+
+    void setSourceDir(File sourceDir) {
+        this.sourceDir.set(sourceDir)
+    }
+
+    void setSourceDir(String sourceDir) {
+        setSourceDir(new File(sourceDir))
+    }
+
+    void setSourceDir(Object sourceDir) {
+        setSourceDir(sourceDir as String)
     }
 }

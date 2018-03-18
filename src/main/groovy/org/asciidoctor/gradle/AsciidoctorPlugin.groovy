@@ -38,7 +38,6 @@ class AsciidoctorPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.apply(plugin: 'base')
 
-        @SuppressWarnings('UnusedVariable')
         AsciidoctorExtension asciidoctorExtension = project.extensions.create(ASCIIDOCTOR, AsciidoctorExtension, project)
         AsciidoctorJExtension asciidoctorJExtension = project.extensions.create(ASCIIDOCTORJ, AsciidoctorJExtension, project)
 
@@ -64,8 +63,14 @@ class AsciidoctorPlugin implements Plugin<Project> {
             }
         })
 
-        project.task(ASCIIDOCTOR, type: AsciidoctorTask) {
-            classpath = configuration
-        }
+        project.tasks.create(ASCIIDOCTOR, AsciidoctorTask, new Action<AsciidoctorTask>() {
+            @Override
+            void execute(AsciidoctorTask asciidoctorTask) {
+                // Map extension properties to the task properties
+                asciidoctorTask.sourceDir.set(asciidoctorExtension.sourceDir)
+
+                asciidoctorTask.classpath = configuration
+            }
+        })
     }
 }

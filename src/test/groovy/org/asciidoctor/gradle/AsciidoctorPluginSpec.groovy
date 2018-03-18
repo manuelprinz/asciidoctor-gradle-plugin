@@ -49,7 +49,7 @@ class AsciidoctorPluginSpec extends Specification {
             Task asciidoctorTask = project.tasks.findByName(ASCIIDOCTOR)
             asciidoctorTask != null
             asciidoctorTask.group == 'Documentation'
-            asciidoctorTask.sourceDir == project.file('src/docs/asciidoc')
+            asciidoctorTask.sourceDir.getAsFile().getOrNull() == project.file('src/docs/asciidoc')
             asciidoctorTask.outputDir == new File(project.buildDir, 'asciidoc')
 
             project.tasks.findByName('clean') != null

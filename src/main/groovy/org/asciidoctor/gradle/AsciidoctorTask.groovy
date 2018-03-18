@@ -20,14 +20,15 @@ import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.CopySpec
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.file.copy.CopySpecInternal
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -67,7 +68,15 @@ class AsciidoctorTask extends DefaultTask {
 
     private boolean baseDirSetToNull
     private Object outDir
-    private Object srcDir
+
+    //private Object srcDir
+    private final DirectoryProperty sourceDir  // read-only, wired via extension
+
+    @InputDirectory
+    DirectoryProperty getSourceDir() {
+        sourceDir
+    }
+    
     private final List<Object> gemPaths = []
     private Set<String> backends
     private Set<String> requires
@@ -124,7 +133,7 @@ class AsciidoctorTask extends DefaultTask {
         description = 'Converts AsciiDoc files and copies the output files and related resources to the build directory.'
         group = 'Documentation'
 
-        srcDir = project.file('src/docs/asciidoc')
+        this.sourceDir = project.layout.directoryProperty()
     }
 
     /** Returns all of the Asciidoctor options
@@ -352,30 +361,40 @@ class AsciidoctorTask extends DefaultTask {
         gemPath.files*.toString().join(PATH_SEPARATOR)
     }
 
-    /** Sets the new Asciidoctor parent source directory.
+
+    /* Sets the new Asciidoctor parent source directory.
      *
      * @param f An object convertible via {@code project.file}
      * @since 1.5.1
      */
+    /*
     void sourceDir(Object f) {
-        this.srcDir = f
+        srcDir = project.file(f)
     }
+    */
 
-    /** Sets the new Asciidoctor parent source directory.
+    /* Sets the new Asciidoctor parent source directory.
      *
      * @param f A {@code File} object pointing to the parent source directory
      */
-    void setSourceDir(File f) {
-        this.srcDir = f
-    }
+    //void setSourceDir(File f) {
+    //    this.srcDir.set(f)
+    //}
 
-    /** Returns the parent directory for Asciidoctor source. Default is {@code src/asciidoc}.
+    /*
+     * Returns the parent directory for Asciidoctor sources. Default is {@code src/asciidoc}.
      */
-    @Optional
-    @InputDirectory
+    /*
+    @InputDirectory @Optional
     File getSourceDir() {
-        project.file(srcDir)
+        srcDir
     }
+    */
+
+    @OutputDirectory
+    final DirectoryProperty sourceDir
+
+
 
     /** Sets the new Asciidoctor parent output directory.
      *
@@ -423,11 +442,11 @@ class AsciidoctorTask extends DefaultTask {
      * @param f A file that is relative to {@code sourceDir}
      * @deprecated
      */
-    @SuppressWarnings('UnnecessarySetter')
+    @SuppressWarnings(['UnnecessarySetter', 'UnnecessaryGetter'])
     void setSourceDocumentName(File f) {
         deprecated 'setSourceDocumentName', 'setIncludes', 'File will be converted to a pattern.'
         sources {
-            setIncludes([AsciidoctorUtils.getRelativePath(f.absoluteFile, sourceDir.absoluteFile)])
+            setIncludes([AsciidoctorUtils.getRelativePath(f.absoluteFile, sourceDir.getAsFile().get().absoluteFile)])
         }
     }
 
@@ -437,11 +456,11 @@ class AsciidoctorTask extends DefaultTask {
      * @since 1.5.0
      * @deprecated
      */
-    @SuppressWarnings(['DuplicateStringLiteral', 'UnnecessarySetter'])
+    @SuppressWarnings(['DuplicateStringLiteral', 'UnnecessarySetter', 'UnnecessaryGetter'])
     void setSourceDocumentNames(Object... src) {
         deprecated 'setSourceDocumentNames', 'setIncludes', 'Files are converted to patterns. Some might not convert correctly. ' +
                 'FileCollections will not convert'
-        File base = sourceDir.absoluteFile
+        File base = sourceDir.getAsFile().get().absoluteFile
         def patterns = CollectionUtils.stringize(src as List).collect { String it ->
             def tmpFile = new File(it)
             String relPath
@@ -484,7 +503,7 @@ class AsciidoctorTask extends DefaultTask {
     @InputFiles
     @SkipWhenEmpty
     FileTree getSourceFileTree() {
-        project.fileTree(sourceDir).
+        project.fileTree(sourceDir.get()).
                 matching(this.sourceDocumentPattern ?: defaultSourceDocumentPattern)
     }
 
@@ -542,7 +561,7 @@ class AsciidoctorTask extends DefaultTask {
      */
     CopySpec getDefaultResourceCopySpec() {
         project.copySpec {
-            from(sourceDir) {
+            from(sourceDir.get()) {
                 include 'images/**'
             }
         }
@@ -648,6 +667,7 @@ class AsciidoctorTask extends DefaultTask {
 
     @SuppressWarnings('CatchException')
     @SuppressWarnings('DuplicateStringLiteral')
+    @SuppressWarnings('UnnecessaryGetter')
     protected void processDocumentsAndResources(final String backend) {
         try {
             resourceCopyProxy.copy(outputBackendDir(outputDir, backend), resourceCopySpec)
@@ -657,7 +677,7 @@ class AsciidoctorTask extends DefaultTask {
                 if (file.name.startsWith('_')) {
                     throw new InvalidUserDataException('Source documents may not start with an underscore')
                 }
-                File destinationParentDir = owner.outputDirFor(file, sourceDir.absolutePath, outputDir, backend)
+                File destinationParentDir = owner.outputDirFor(file, sourceDir.getAsFile().get().absolutePath, outputDir, backend)
                 processSingleFile(backend, destinationParentDir, file)
             }
 

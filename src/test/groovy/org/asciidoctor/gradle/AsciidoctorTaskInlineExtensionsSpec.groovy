@@ -93,7 +93,7 @@ class AsciidoctorTaskInlineExtensionsSpec extends Specification {
                 sourceDir = srcDir
                 sourceDocumentNames = [ASCIIDOC_INLINE_EXTENSIONS_FILE]
                 outputDir = outDir
-                extensions new File(sourceDir, ASCIIDOC_MACRO_EXTENSION_SCRIPT)
+                extensions new File(srcDir, ASCIIDOC_MACRO_EXTENSION_SCRIPT)
             }
             File resultFile = new File(outDir, 'html5' + File.separator + ASCIIDOC_INLINE_EXTENSIONS_RESULT_FILE)
         when:

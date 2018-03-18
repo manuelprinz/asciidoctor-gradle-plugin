@@ -523,3 +523,28 @@ If Gradle detects that there were no changes, asciidoctor processing will be ski
 ----
 asciidoctor.outputs.upToDateWhen { false }
 ----
+
+[appendix]
+== Migrating from earlier versions
+
+== Migrating from 1.x to 2.x
+
+=== Settings via methods are deprecated
+
+Settings have to be changed by means of assignment, e. g.
+[source,groovy]
+----
+asciidoctor {
+    sourceDir = "src/docs"
+}
+----
+Using methods explicitly, such as
+[source,groovy]
+----
+asciidoctor {
+    setSourceDir("src/docs")
+    // or
+    sourceDir("src/docs")
+}
+----
+are no longer supported.

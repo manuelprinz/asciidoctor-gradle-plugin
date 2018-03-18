@@ -300,46 +300,6 @@ class AsciidoctorTaskSpec extends Specification {
     }
 
     @SuppressWarnings('MethodName')
-    def "Allow setting of sourceDir via method"() {
-        when:
-            Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
-                sourceDir project.projectDir
-            }
-
-        then:
-            ! systemOut.toString().contains('deprecated')
-            task.getSourceDir().absolutePath == project.projectDir.absolutePath
-            task.sourceDir.absolutePath == project.projectDir.absolutePath
-    }
-
-
-    @SuppressWarnings('MethodName')
-    def "When setting sourceDir via assignment"() {
-        when:
-            Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
-                sourceDir = project.projectDir
-            }
-
-        then:
-            task.getSourceDir().absolutePath == project.projectDir.absolutePath
-            task.sourceDir.absolutePath == project.projectDir.absolutePath
-
-    }
-
-    @SuppressWarnings('MethodName')
-    def "When setting sourceDir via setSourceDir"() {
-        when:
-            Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
-                setSourceDir project.projectDir
-            }
-
-        then:
-            task.getSourceDir().absolutePath == project.projectDir.absolutePath
-            task.sourceDir.absolutePath == project.projectDir.absolutePath
-            !systemOut.toString().contains('deprecated')
-    }
-
-    @SuppressWarnings('MethodName')
     def "Allow setting of gemPath via method"() {
         when:
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
@@ -379,7 +339,7 @@ class AsciidoctorTaskSpec extends Specification {
     def "sourceDocumentNames should resolve descendant files of sourceDir if supplied as relatives"() {
         when: "I specify two files relative to sourceDir,including one in a subfoler"
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
-                sourceDir srcDir
+                sourceDir = srcDir
                 sourceDocumentNames = [ASCIIDOC_SAMPLE_FILE, ASCIIDOC_SAMPLE2_FILE]
             }
             def fileCollection = task.sourceDocumentNames
@@ -399,7 +359,7 @@ class AsciidoctorTaskSpec extends Specification {
 
         when: "I specify two absolute path files, that are descendents of sourceDit"
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
-                sourceDir srcDir
+                sourceDir = srcDir
                 sourceDocumentNames = [sample1,sample2]
             }
             def fileCollection = task.sourceDocumentNames
@@ -418,7 +378,7 @@ class AsciidoctorTaskSpec extends Specification {
 
         when:
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
-                sourceDir srcDir
+                sourceDir = srcDir
                 sourceDocumentNames = [sample1]
             }
             def fileCollection = task.sourceDocumentNames
@@ -472,7 +432,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
                 resourceCopyProxy = mockCopyProxy
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir = outDir
             }
 
@@ -565,7 +525,7 @@ class AsciidoctorTaskSpec extends Specification {
                 resourceCopyProxy = mockCopyProxy
                 sourceDir = srcDir
                 outputDir = outDir
-                sourceDocumentName = new File(srcDir, ASCIIDOC_SAMPLE_FILE)
+                sourceDocumentName = new File(srcDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE)
             }
         when:
             task.processAsciidocSources()
@@ -581,8 +541,8 @@ class AsciidoctorTaskSpec extends Specification {
                 resourceCopyProxy = mockCopyProxy
                 sourceDir = srcDir
                 outputDir = outDir
-                sourceDocumentName = new File(srcDir, ASCIIDOC_SAMPLE_FILE)
-                sourceDocumentNames = new SimpleFileCollection(new File(srcDir, ASCIIDOC_SAMPLE_FILE))
+                sourceDocumentName = new File(srcDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE)
+                sourceDocumentNames = new SimpleFileCollection(new File(srcDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE))
             }
         when:
             task.processAsciidocSources()
@@ -602,8 +562,12 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE2_FILE), { it.to_dir == new File(task.outputDir, 'subdir').absolutePath })
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), { it.to_dir == task.outputDir.absolutePath })
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE2_FILE), {
+            it.to_dir == new File(task.outputDir, 'subdir').absolutePath
+        })
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
+            it.to_dir == task.outputDir.absolutePath
+        })
         and:
             0 * mockAsciidoctor.renderFile(_, _)
     }
@@ -697,7 +661,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), { it.base_dir == basedir.absolutePath })
+            1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), { it.base_dir == basedir.absolutePath })
     }
 
     @SuppressWarnings('MethodName')
@@ -712,8 +676,8 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE),
-                    { it.base_dir == new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE).getParentFile().absolutePath })
+            1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE),
+                    { it.base_dir == new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE).getParentFile().absolutePath })
     }
 
     @SuppressWarnings('MethodName')
@@ -728,7 +692,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), { !it.base_dir })
+            1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), { !it.base_dir })
     }
 
     @SuppressWarnings('MethodName')
@@ -742,7 +706,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
                 it.safe == SafeMode.UNSAFE.level
             })
     }
@@ -761,7 +725,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
                 it.safe == SafeMode.SERVER.level
             })
     }
@@ -780,7 +744,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
                 it.safe == SafeMode.SERVER.level
             })
     }
@@ -799,7 +763,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
                 it.safe == SafeMode.SERVER.level
             })
     }
@@ -815,9 +779,9 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
-                it.attributes.projectdir == AsciidoctorUtils.getRelativePath(project.projectDir, new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE).getParentFile())
-                it.attributes.rootdir == AsciidoctorUtils.getRelativePath(project.rootDir, new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE).getParentFile())
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
+            it.attributes.projectdir == AsciidoctorUtils.getRelativePath(project.projectDir, new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE).getParentFile())
+            it.attributes.rootdir == AsciidoctorUtils.getRelativePath(project.rootDir, new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE).getParentFile())
             })
     }
 
@@ -833,7 +797,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), _)
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), _)
             !outDir.listFiles({ !it.directory && !(it.name =~ DOCINFO_FILE_PATTERN) } as FileFilter)
     }
 
@@ -850,7 +814,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
                 it.attributes.'project-name' == 'test' &&
                 it.attributes.'project-group' == 'com.acme' &&
                 it.attributes.'project-version' == '1.0.0-SNAPSHOT'
@@ -877,7 +841,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), {
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), {
                 it.attributes.'project-name' == 'awesome' &&
                     it.attributes.'project-group' == 'unicorns' &&
                     it.attributes.'project-version' == '1.0.0.Final'
@@ -896,7 +860,7 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE),_ )
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), _)
     }
 
     @SuppressWarnings('MethodName')
@@ -913,8 +877,8 @@ class AsciidoctorTaskSpec extends Specification {
         when:
             task.processAsciidocSources()
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE),_ )
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE2_FILE),_ )
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), _)
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE2_FILE), _)
     }
 
     @SuppressWarnings('MethodName')
@@ -938,7 +902,7 @@ class AsciidoctorTaskSpec extends Specification {
         given:
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
                 resourceCopyProxy = mockCopyProxy
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir outDir
                 setSourceDocumentNames ASCIIDOC_INVALID_FILE
             }
@@ -954,7 +918,7 @@ class AsciidoctorTaskSpec extends Specification {
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
                 resourceCopyProxy = mockCopyProxy
 
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir outDir
                 backends AsciidoctorBackend.HTML5.id
 
@@ -974,7 +938,7 @@ class AsciidoctorTaskSpec extends Specification {
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
                 resourceCopyProxy = mockCopyProxy
 
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir outDir
                 backends AsciidoctorBackend.HTML5.id,AsciidoctorBackend.DOCBOOK.id
 
@@ -995,7 +959,7 @@ class AsciidoctorTaskSpec extends Specification {
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
                 resourceCopyProxy = mockCopyProxy
 
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir outDir
                 backends AsciidoctorBackend.HTML5.id,AsciidoctorBackend.DOCBOOK.id
 
@@ -1022,7 +986,6 @@ class AsciidoctorTaskSpec extends Specification {
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask)
 
         then:
-            task.sourceDir.absolutePath.replace('\\', '/').endsWith('src/docs/asciidoc')
             task.outputDir.absolutePath.replace('\\', '/').endsWith('build/asciidoc')
     }
 
@@ -1056,7 +1019,7 @@ class AsciidoctorTaskSpec extends Specification {
             Task task = project.tasks.create(name: ASCIIDOCTOR, type: AsciidoctorTask) {
                 resourceCopyProxy = mockCopyProxy
 
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir "${outDir}/foo"
                 backends AsciidoctorBackend.HTML5.id
 
@@ -1090,7 +1053,7 @@ class AsciidoctorTaskSpec extends Specification {
                     foo: "${variable}"
                 ]
                 resourceCopyProxy = mockCopyProxy
-                sourceDir srcDir
+                sourceDir = srcDir
                 outputDir = outDir
             }
 
@@ -1098,7 +1061,7 @@ class AsciidoctorTaskSpec extends Specification {
             task.processAsciidocSources()
 
         then:
-            1 * mockAsciidoctor.renderFile(new File(task.sourceDir, ASCIIDOC_SAMPLE_FILE), { Map props ->
+        1 * mockAsciidoctor.renderFile(new File(task.sourceDir.getAsFile().get(), ASCIIDOC_SAMPLE_FILE), { Map props ->
                 props.template_dirs*.class == [String] &&
                 props.attributes.foo.class == String
             })
